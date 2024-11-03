@@ -5,6 +5,30 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
+#include <sqlite3.h>
+
+void createTable() {
+    sqlite3 *db;
+    char *errMsg = 0;
+    int rc;
+
+    rc = sqlite3_open("reservations.db", &db);
+    if(rc) {
+        std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+        return;
+    }
+
+    const char* sql = "CREATE TABLE IF NOT EXISTS RESERVATIONS (ID INT PRIMARY KEY, NAME TEXT, EVENT TEXT);";
+    rc = sqlite3_exec(db, sql, 0, 0, &errMsg);
+
+    if(rc != SQLITE_OK) {
+        std::cerr << "SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+    }
+
+    sqlite3_close(db);
+}
+
 
 #define MAX_EVENTS 100
 #define CAPACITY 500
@@ -149,6 +173,7 @@ void* worker_thread(void* arg) {
 }
 
 int main() {
+     std::cout << "Welcome to the Multi-Threaded Event Reservation System!" << std::endl;
     for (int i = 0; i < MAX_EVENTS; i++) {
         pthread_mutex_init(&event_mutex[i], NULL);
         available_seats[i] = CAPACITY;
